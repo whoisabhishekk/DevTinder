@@ -1,7 +1,8 @@
 const express = require("express");
+const bcrypt = require("bcrypt")
 const connectDB = require("../src/confiq/database");
 const User = require("../src/models/User");
-
+const validateSignupData = require("../src/utils/validation")
 
 const app = express();
 
@@ -10,7 +11,21 @@ app.use(express.json());
 
 //NOTE - Signup api
 app.post("/signup",async (req,res)=>{
-    const user = new User(req.body);
+    
+    //ANCHOR - Validate the data
+    validateSignupData(req.body);
+
+    //ANCHOR - Encryption of password
+    const {firstName , lastName , emailId , password} = req.body;
+    const passwordHash = await bcrypt.hash(password,10);
+
+    //ANCHOR - Storing user data in DB
+    const user = new User({
+        firstName,
+        lastName,
+        emailId,
+        password : passwordHash
+    });
     try{
         await user.save();
         res.send("signup successfull")
@@ -87,6 +102,31 @@ app.patch("/user/:userId" , async (req,res)=>{
         res.status(400).send("Error:"+error)
     }
 })
+
+//ANCHOR - Login api
+app.post("/login", async (req,res)=>{
+    try{
+        const {emailId,password} = req.body;
+        
+        //NOTE - Check user is availbale in my db or not
+        const user = await User.findOne({emailId});
+        if(!user){
+            throw new Error("Invalid credentials");
+        }
+
+        //NOTE - Checking password using bcrypt
+        const isPasswordValid = bcrypt.compare(password,user.password);
+
+        if(isPasswordValid){
+            res.send("Login Successfully!!!")
+        } else{
+            throw new Error("Invalid credentials")
+        }
+
+    } catch(error){
+        res.status(400).send("Error :"+error);
+    }
+});
 
 //ANCHOR - DB connection
 connectDB()
