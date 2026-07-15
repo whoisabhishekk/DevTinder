@@ -1,141 +1,110 @@
 const express = require("express");
 const bcrypt = require("bcrypt")
 const connectDB = require("../src/confiq/database");
-const User = require("../src/models/User");
+const User = require("./models/user");
 const validateSignupData = require("../src/utils/validation")
+const cookieParser = require("cookie-parser")
+const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middlewares/auth");
 
+
+//Making app using express
 const app = express();
 
+
+//Middlewares
 app.use(express.json());
+app.use(cookieParser());
 
+//APIs
 
-//NOTE - Signup api
-app.post("/signup",async (req,res)=>{
-    
-    //ANCHOR - Validate the data
+//Signup api
+app.post("/signup", async (req, res) => {
+
+    //Validate the data
     validateSignupData(req.body);
 
-    //ANCHOR - Encryption of password
-    const {firstName , lastName , emailId , password} = req.body;
-    const passwordHash = await bcrypt.hash(password,10);
+    //Encryption of password
+    const { firstName, lastName, emailId, password } = req.body;
+    const passwordHash = await bcrypt.hash(password, 10);
 
-    //ANCHOR - Storing user data in DB
+    //Storing user data in DB
     const user = new User({
         firstName,
         lastName,
         emailId,
-        password : passwordHash
+        password: passwordHash
     });
-    try{
+    try {
         await user.save();
         res.send("signup successfull")
 
-    } catch(err){
-        console.log("Error :"+err);
-    }
-})
-
-//NOTE - get user by email
-app.get("/user", async (req,res)=>{
-    const userEmail = req.body.emailId;
-
-    try{
-        const users = await User.find({emailId : userEmail});
-        if(users.length === 0){
-            res.status(404).send("User doesnt found");
-        }
-        res.send(users);
-    } catch(error){
-        res.status(400).send("Error:"+error)
-    }
-})
-
-//NOTE - Feed API - GET /feed - get all the users from the database
-app.get("/feed" , async(req,res)=>{
-    try{
-        const users = await User.find({});
-        res.send(users);
-    }catch(error){
-        res.status(400).send("Error:"+error)
-    }
-
-})
-
-//NOTE - delete a user
-app.delete("/user",async (req,res)=>{
-    const userId = req.body.userId;
-    try{
-       await User.findByIdAndDelete({_id : userId });
-        res.send("User deleted successfully");
-    } catch(error){
-        res.status(400).send("Error:"+error)
+    } catch (err) {
+        console.log("Error :" + err);
     }
 })
 
 
-//NOTE - Update data of the user
-app.patch("/user/:userId" , async (req,res)=>{
-    
-    const userId = req.params?.userId;
-    try{
-        const ALLOWED_UPDATES = ["about","photoUrl","gender","age","skills"];
+//Profile
+app.get("/profile", userAuth, async (req, res) => {
 
-        const isUpdateAllowed = Object.keys(data).every((k)=>{
-        ALLOWED_UPDATES.includes(k);
-        })
+    try {
+        const user = req.user;
 
-        if(!isUpdateAllowed){
-            throw new Error("Update not allowed")
-        }
-
-        if(data.skills.length > 10){
-            throw new Error("Skill can be more than 10")
-        }
-        
-        const user = await User.findByIdAndUpdate(userId , data,{
-            returnDocument:"after",
-            runValidators:true
-        })
-        res.send("User updated successfully");
-
-    }catch(error){
-        res.status(400).send("Error:"+error)
+        res.send(user);
+    } catch (err) {
+        res.status(400).send("ERROR : " + err.message);
     }
 })
 
-//ANCHOR - Login api
-app.post("/login", async (req,res)=>{
-    try{
-        const {emailId,password} = req.body;
-        
-        //NOTE - Check user is availbale in my db or not
-        const user = await User.findOne({emailId});
-        if(!user){
+//Login APi
+app.post("/login", async (req, res) => {
+    try {
+        const { emailId, password } = req.body;
+
+        //Check user is availbale in my db or not
+        const user = await User.findOne({ emailId });
+        if (!user) {
             throw new Error("Invalid credentials");
         }
 
-        //NOTE - Checking password using bcrypt
-        const isPasswordValid = bcrypt.compare(password,user.password);
+        //Checking password using bcrypt
+        const isPasswordValid = await user.validatePassword(password);
 
-        if(isPasswordValid){
-            res.send("Login Successfully!!!")
-        } else{
+        if (isPasswordValid) {
+
+            //create a jwt token
+            const token = await user.getJwtToken();
+
+            //add the token to cookie and send the response to the user
+            res.cookie("token", token);
+            res.send("Login successful!!!");
+
+        } else {
             throw new Error("Invalid credentials")
         }
 
-    } catch(error){
-        res.status(400).send("Error :"+error);
+    } catch (error) {
+        res.status(400).send("Error :" + error);
+
     }
 });
 
-//ANCHOR - DB connection
+app.post("/sendConnectionRequest",userAuth,async (req , res)=>{
+
+    const user = req.user;
+    
+    //sending connection request
+    res.send(user.firstName + " Sent the connection request");
+})
+//DB connection 
 connectDB()
-    .then(()=>{
+    .then(() => {
         console.log("Database established");
-        app.listen(8787,()=>{
+        app.listen(8787, () => {
             console.log("Server is running at port 8787");
         })
-    }).catch(err=>{
+    }).catch(err => {
         console.log("Dabatabe not connected");
-        console.log("Error:" + err); 
+        console.log("Error:" + err);
     })
