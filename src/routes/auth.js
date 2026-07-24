@@ -7,30 +7,34 @@ const jwt = require("jsonwebtoken");
 
 
 //signup api
+//signup api
 authRouter.post("/signup", async (req, res) => {
-
-    //Validate the data
-    validateSignupData(req.body);
-
-    //Encryption of password
-    const { firstName, lastName, emailId, password } = req.body;
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    //Storing user data in DB
-    const user = new User({
-        firstName,
-        lastName,
-        emailId,
-        password: passwordHash
-    });
     try {
+        // 1. Validate the data
+        validateSignupData(req.body);
+
+        // 2. Encryption of password
+        const { firstName, lastName, emailId, password } = req.body;
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        // 3. Storing user data in DB
+        const user = new User({
+            firstName,
+            lastName,
+            emailId,
+            password: passwordHash
+        });
+
         await user.save();
-        res.send("signup successfull")
+        res.send("signup successfull");
 
     } catch (err) {
-        console.log("Error :" + err);
+        // Agar validation fail hota hai, ya database me koi issue aata hai, 
+        // toh server crash nahi hoga balki user ko error response jayega.
+        res.status(400).send("Error : " + err.message);
     }
 })
+
 
 //login api
 authRouter.post("/login", async (req, res) => {
