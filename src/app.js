@@ -7,7 +7,7 @@ const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const connectionRequestRouter = require("./routes/request");
 
-
+// using middlewares
 const app = express();
 app.use(express.json());
 app.use(cookieParser());

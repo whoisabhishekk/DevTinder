@@ -1,6 +1,6 @@
 const validator = require("validator")
-
-
+ 
+// Validating Signup Data
 const validateSignupData = (data)=>{
     const {firstName,lastName,emailId,password} = data;
 
@@ -17,4 +17,13 @@ const validateSignupData = (data)=>{
     }
 };
 
-module.exports = validateSignupData;
+// Validate the profile edit data
+const validateEditProfileData = (req)=>{
+    const allowedEditFields = ["firstName","lastName","emailId","about","skills","photoUrl", "age", "gender"];
+    const isEditAllowed = Object.keys(req.body).every(field=>allowedEditFields.includes(field));  
+
+    return isEditAllowed;
+    
+};
+
+module.exports = {validateEditProfileData,validateSignupData}
