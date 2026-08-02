@@ -12,7 +12,7 @@ requestRouter.post("/request/send/:status/:toUserId",userAuth,async (req , res)=
         const toUserId = req.params.toUserId;
         const status = req.params.status;
 
-        const allowedStatus = ["interested","ignored"];
+        const allowedStatus = ["interested","ignore"];
 
         if(!allowedStatus.includes(status)){
             return res.status(400).json({ 
@@ -50,7 +50,7 @@ requestRouter.post("/request/send/:status/:toUserId",userAuth,async (req , res)=
         const data = await connectionRequest.save();
 
         res.json({
-            message:req.user.firstName+"is "+status+" in regards to "+toUser.firstName,
+            message:req.user.firstName+" is "+status+" in regards to "+toUser.firstName,
             data
         });
     
