@@ -1,5 +1,4 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const userRouter = express.Router();
 const {userAuth} = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
@@ -22,7 +21,7 @@ userRouter.get("/user/requests" , userAuth , async (req , res) =>{
             data : connectionRequests
         })
     } catch(error) {
-        res.status(400).send("Error :" + error);
+        res.status(400).json({message: error.message});
     }
 });
 
@@ -51,7 +50,7 @@ userRouter.get("/user/connections",userAuth , async (req,res)=>{
         res.json({data:data})
 
     } catch(error) {
-        res.status(400).send({message:error.message})
+        res.status(400).json({message: error.message})
     }
 });
 
@@ -75,9 +74,9 @@ userRouter.get("/feed" , userAuth , async (req , res)=>{
         }).select("fromUserId toUserId");
 
         const hideUsersFromFeed = new Set();
-        connectionRequest.forEach(req => {
-            hideUsersFromFeed.add(req.fromUserId.toString());
-            hideUsersFromFeed.add(req.toUserId.toString());
+        connectionRequest.forEach(connection => {
+            hideUsersFromFeed.add(connection.fromUserId.toString());
+            hideUsersFromFeed.add(connection.toUserId.toString());
         });
 
         const users = await User.find({
@@ -89,7 +88,7 @@ userRouter.get("/feed" , userAuth , async (req , res)=>{
 
         res.json({data:users});
     } catch(error){
-        res.status(400).send({message:error.message})
+        res.status(400).json({message: error.message})
     }
 });
 

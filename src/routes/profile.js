@@ -9,11 +9,12 @@ const profileRouter = express.Router();
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
 
     try {
-        const user = req.user;
+        const user = req.user.toObject();
+        delete user.password;
 
-        res.send(user);
+        res.json(user);
     } catch (err) {
-        res.status(400).send("ERROR : " + err.message);
+        res.status(400).json({message: err.message});
     }
 })
 
@@ -32,7 +33,7 @@ profileRouter.patch("/profile/edit", userAuth ,async(req,res)=>{
         res.send(`${user.firstName} , your profile has been updated successfully! `);
 
     }catch(err){
-        res.status(400).send("ERROR : " + err.message);
+        res.status(400).json({message: err.message});
     }
     
 })

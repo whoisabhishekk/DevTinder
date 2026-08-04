@@ -56,7 +56,7 @@ requestRouter.post("/request/send/:status/:toUserId",userAuth,async (req , res)=
         });
     
     } catch(error){
-        res.status(400).send("ERROR : " + error.message);
+        res.status(400).json({message: error.message});
     }
 })
 
@@ -96,7 +96,7 @@ requestRouter.post("/request/review/:status/:requestId",userAuth,async (req , re
         })  
 
     } catch(error) {
-        res.status(400).send("Error : " + error);
+        res.status(400).json({message: error.message});
     }
 })
     

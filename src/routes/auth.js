@@ -29,7 +29,7 @@ authRouter.post("/signup", async (req, res) => {
     } catch (err) {
         // Agar validation fail hota hai, ya database me koi issue aata hai, 
         // toh server crash nahi hoga balki user ko error response jayega.
-        res.status(400).send("Error : " + err.message);
+        res.status(400).json({message: err.message});
     }
 })
 
@@ -55,7 +55,9 @@ authRouter.post("/login", async (req, res) => {
 
             //add the token to cookie and send the response to the user
             res.cookie("token", token,{
-                expires: new Date(Date.now() + 8*3600000)
+                expires: new Date(Date.now() + 8*3600000),
+                httpOnly: true,
+                secure: true
             });
             res.send("Login successful!!!");
 
@@ -64,7 +66,7 @@ authRouter.post("/login", async (req, res) => {
         }
 
     } catch (error) {
-        res.status(400).send("Error :" + error);
+        res.status(400).json({message: error.message});
 
     }
 });
@@ -77,7 +79,7 @@ authRouter.post("/logout",async(req,res)=>{
         });
         res.send("Logout successful");
     } catch (error) {
-        res.status(500).send(error.message);
+        res.status(500).json({message: error.message});
     }
 })
 module.exports = authRouter;
