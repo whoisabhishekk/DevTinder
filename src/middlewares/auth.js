@@ -6,6 +6,7 @@ const userAuth = async (req,res,next) =>{
 
     //ANCHOR - read the token from req.cokkies
     try{
+
         const {token} = req.cookies;
         if(!token){
             throw new Error("Token is not valid");
@@ -21,7 +22,7 @@ const userAuth = async (req,res,next) =>{
         next();
 
     } catch(error) {
-        res.status(404).send("Error : "+error)
+        res.status(401).send("Error : "+error)
     }
 
 };

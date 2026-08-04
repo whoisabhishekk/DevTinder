@@ -1,11 +1,12 @@
 const express = require("express");
-const connectDB = require("../src/confiq/database");
+const connectDB = require("./config/database");
 const cookieParser = require("cookie-parser")
 
 //importing api routes
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const connectionRequestRouter = require("./routes/request");
+const userRouter = require("./routes/user");
 
 // using middlewares
 const app = express();
@@ -15,6 +16,7 @@ app.use(cookieParser());
 app.use("/",authRouter);
 app.use("/",profileRouter);
 app.use("/",connectionRequestRouter);
+app.use("/",userRouter);
 
 //DB connection 
 connectDB()
@@ -24,6 +26,6 @@ connectDB()
             console.log("Server is running at port 8787");
         })
     }).catch(err => {
-        console.log("Dabatabe not connected");
+        console.log("Database not connected");
         console.log("Error:" + err);
     }) 

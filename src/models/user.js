@@ -1,10 +1,10 @@
 const bcrypt = require("bcrypt")
-const mongooose = require("mongoose")
+const mongoose = require("mongoose")
 const validator = require("validator")
 const jwt = require("jsonwebtoken")
 
 
-const userSchema = new mongooose.Schema({
+const userSchema = new mongoose.Schema({
     firstName:{
         type : String,
         required : true,
@@ -29,12 +29,7 @@ const userSchema = new mongooose.Schema({
     },
     password:{
         type:String,
-        required: true,
-        validate(value){
-            if(!validator.isStrongPassword(value)){
-                throw new Error("Enter a strong password");
-            }
-        }
+        required: true
     },
     age:{
         type:Number,
@@ -61,9 +56,17 @@ const userSchema = new mongooose.Schema({
         default:"This is a default description of a user"
     },
     skills:{
-        type:[String]
+        type:[String],
+        validate: {
+            validator: function (v) {
+                return v.length <= 10;
+            },
+            message: 'Skills array cannot exceed 10 items'
+        }
     }
 },{timestamps:true});
+
+userSchema.index({firstName:1,lastName:1});
 
 // JWT token generation method
 userSchema.methods.getJwtToken = async function (){
@@ -78,8 +81,8 @@ userSchema.methods.getJwtToken = async function (){
 userSchema.methods.validatePassword = async function (passwordInputByUser) {
     const user = this;
     const passwordHash = user.password;
-    const isPasswordValid = bcrypt.compare(passwordInputByUser, passwordHash);
+    const isPasswordValid = await bcrypt.compare(passwordInputByUser, passwordHash);
     return isPasswordValid;
 }
 
-module.exports = mongooose.model("User",userSchema);
+module.exports = mongoose.model("User",userSchema);
