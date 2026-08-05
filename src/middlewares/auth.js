@@ -9,14 +9,14 @@ const userAuth = async (req,res,next) =>{
 
         const {token} = req.cookies;
         if(!token){
-            throw new Error("Token is not valid");
+            return res.status(401).send("Please login first..!")
         }
         const decodedObj = await jwt.verify(token , "abhishek");
         const {_id} = decodedObj;
 
         const user = await User.findById(_id);
-        if(!user){
-            throw new Error("User not found");
+        if(!user){  
+            return res.status(401).send("User not found..!");
         }
         req.user = user;
         next();
